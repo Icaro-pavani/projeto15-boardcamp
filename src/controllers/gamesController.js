@@ -30,3 +30,36 @@ export async function addGame(req, res) {
     res.sendStatus(500);
   }
 }
+
+export async function getGames(req, res) {
+  try {
+    const searchString = req.query.name;
+
+    console.log(searchString);
+
+    if (!searchString) {
+      const games = await db.query(`
+        SELECT games.*, categories.name as "categoryName"
+        FROM games JOIN categories 
+        ON games."categoryId"=categories.id 
+        `);
+
+      return res.status(200).send(games.rows);
+    }
+
+    const games = await db.query(
+      `
+        SELECT games.*, categories.name as "categoryName"
+        FROM games JOIN categories 
+        ON games."categoryId"=categories.id
+        WHERE LOWER(games.name) LIKE $1||'%'
+    `,
+      [searchString.toLowerCase()]
+    );
+
+    res.status(200).send(games.rows);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+}
