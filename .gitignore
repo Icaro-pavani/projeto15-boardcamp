@@ -3,3 +3,9 @@
 
 # environment variables
 .env
+
+# front-end
+/boardcamp-front-main
+
+# database
+/database-boardcamp
