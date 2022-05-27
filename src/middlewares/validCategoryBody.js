@@ -1,12 +1,12 @@
-import categoriesSchema from "../schemas/categoriesSchema.js";
 import { stripHtml } from "string-strip-html";
 
-export default async function validCategoryBody(req, res, next) {
-  const categoryBody = {
-    name: stripHtml(req.body.name).result.trim(),
-  };
+import categoriesSchema from "../schemas/categoriesSchema.js";
 
+export default async function validCategoryBody(req, res, next) {
   try {
+    const categoryBody = {
+      name: stripHtml(req.body.name).result.trim(),
+    };
     const categoryValidation = await categoriesSchema.validateAsync(
       categoryBody
     );
