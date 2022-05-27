@@ -7,7 +7,7 @@ const customersSchema = Joi.object({
   name: Joi.string().required(),
   phone: Joi.string().pattern(/^[0-9]{10,11}$/),
   cpf: Joi.string().pattern(/^[0-9]{11}$/),
-  birthday: Joi.date().format("YYYY-MM-DD"),
+  birthday: Joi.date().format("YYYY-MM-DD").raw(),
 });
 
 export default customersSchema;
