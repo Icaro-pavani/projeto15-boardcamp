@@ -4,6 +4,7 @@ import {
   addCustomer,
   getCustomerById,
   getCustomers,
+  updateCustomer,
 } from "../controllers/customersController.js";
 import validCustomerBody from "../middlewares/validCustomerBody.js";
 
@@ -14,5 +15,7 @@ customersRouter.get("/customers", getCustomers);
 customersRouter.get("/customers/:id", getCustomerById);
 
 customersRouter.post("/customers", validCustomerBody, addCustomer);
+
+customersRouter.put("/customers/:id", validCustomerBody, updateCustomer);
 
 export default customersRouter;
