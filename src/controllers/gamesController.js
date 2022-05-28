@@ -34,15 +34,21 @@ export async function addGame(req, res) {
 export async function getGames(req, res) {
   try {
     const searchString = req.query.name;
+    const limit = req.query.limit || null;
+    const offset = req.query.offset || 0;
 
     let games = [];
 
     if (!searchString) {
-      games = await db.query(`
+      games = await db.query(
+        `
         SELECT games.*, categories.name as "categoryName"
         FROM games JOIN categories 
-        ON games."categoryId"=categories.id 
-        `);
+        ON games."categoryId"=categories.id
+        LIMIT $1 OFFSET $2
+        `,
+        [limit, offset]
+      );
     } else {
       games = await db.query(
         `

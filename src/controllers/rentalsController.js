@@ -43,6 +43,8 @@ export async function addRental(req, res) {
 export async function getRentals(req, res) {
   try {
     const { customerId, gameId } = req.query;
+    const limit = req.query.limit || null;
+    const offset = req.query.offset || 0;
     let rentalsResult;
 
     if (customerId) {
@@ -72,14 +74,18 @@ export async function getRentals(req, res) {
         [parseInt(gameId)]
       );
     } else {
-      rentalsResult = await db.query(`
+      rentalsResult = await db.query(
+        `
       SELECT rentals.*, json_build_object('id', customers.id, 'name', customers.name) as costumer, 
       json_build_object('id', games.id, 'name', games.name, 'categoryId', games."categoryId", 'categoryName', categories.name) as game
       FROM rentals 
       JOIN customers ON rentals."customerId" = customers.id
       JOIN games ON rentals."gameId" = games.id
       JOIN categories ON games."categoryId"=categories.id
-    `);
+      LIMIT $1 OFFSET $2
+    `,
+        [limit, offset]
+      );
     }
 
     const rentals = rentalsResult.rows.map((rental) => {

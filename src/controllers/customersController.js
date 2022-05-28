@@ -36,10 +36,15 @@ export async function addCustomer(req, res) {
 export async function getCustomers(req, res) {
   try {
     const cpfQuery = req.query.cpf;
+    const limit = req.query.limit || null;
+    const offset = req.query.offset || 0;
     let customers = [];
 
     if (!cpfQuery) {
-      customers = await db.query(`SELECT * FROM  customers`);
+      customers = await db.query(
+        `SELECT * FROM  customers LIMIT $1 OFFSET $2`,
+        [limit, offset]
+      );
     } else {
       customers = await db.query(
         `SELECT * FROM customers WHERE cpf LIKE $1||'%'`,

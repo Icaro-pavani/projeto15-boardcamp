@@ -24,7 +24,12 @@ export async function addCategory(req, res) {
 
 export async function getCategories(req, res) {
   try {
-    const categories = await db.query(`SELECT * FROM categories`);
+    const limit = req.query.limit || null;
+    const offset = req.query.offset || 0;
+    const categories = await db.query(
+      `SELECT * FROM categories LIMIT $1 OFFSET $2`,
+      [limit, offset]
+    );
     res.status(200).send(categories.rows);
   } catch (error) {
     console.log(error);
