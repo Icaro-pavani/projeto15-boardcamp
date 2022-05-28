@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 import db from "../db.js";
 
 export async function addRental(req, res) {
@@ -80,7 +82,13 @@ export async function getRentals(req, res) {
     `);
     }
 
-    const rentals = rentalsResult.rows;
+    const rentals = rentalsResult.rows.map((rental) => {
+      return {
+        ...rental,
+        rentDate: dayjs(rental.rentDate).format("YYYY-MM-DD"),
+        returnDate: rental.returnDate === null ? null : dayjs(rental.returnDate).format("YYYY-MM-DD"),
+      };
+    });
 
     res.status(200).send(rentals);
   } catch (error) {
