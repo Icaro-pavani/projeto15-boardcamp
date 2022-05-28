@@ -101,44 +101,81 @@ export async function getRentals(req, res) {
 }
 
 export async function returnRental(req, res) {
-  const { id } = req.params;
-  const returnDate = dayjs().format("YYYY-MM-DD");
+  try {
+    const { id } = req.params;
+    const returnDate = dayjs().format("YYYY-MM-DD");
 
-  let delayFee;
+    let delayFee;
 
-  const rentalResult = await db.query(
-    `
-    SELECT rentals.*, games."pricePerDay" FROM rentals 
-    JOIN games ON rentals."gameId" = games.id
-    WHERE rentals.id = $1
-  `,
-    [id]
-  );
+    const rentalResult = await db.query(
+      `
+      SELECT rentals.*, games."pricePerDay" FROM rentals 
+      JOIN games ON rentals."gameId" = games.id
+      WHERE rentals.id = $1
+    `,
+      [parseInt(id)]
+    );
 
-  if (rentalResult.rows.length === 0) {
-    return res.sendStatus(404);
+    if (rentalResult.rows.length === 0) {
+      return res.sendStatus(404);
+    }
+
+    if (rentalResult.rows[0].returnDate !== null) {
+      return res.status(400).send("Rental returned already!");
+    }
+
+    const { rentDate, daysRented, pricePerDay } = rentalResult.rows[0];
+    const daysDelayed = dayjs(returnDate).diff(rentDate, "day") - daysRented;
+
+    if (daysDelayed > 0) {
+      delayFee = daysDelayed * pricePerDay;
+    } else {
+      delayFee = 0;
+    }
+
+    await db.query(
+      `
+      UPDATE rentals SET "returnDate" = $1, "delayFee" = $2 
+      WHERE id = $3
+    `,
+      [returnDate, delayFee, parseInt(id)]
+    );
+
+    res.sendStatus(200);
+  } catch (error) {
+    console.log(error);
+    rentDate.sendStatus(500);
   }
+}
 
-  if (rentalResult.rows[0].returnDate !== null) {
-    return res.status(400).send("Rental returned already!");
+export async function deleteRental(req, res) {
+  try {
+    const { id } = req.params;
+    const rentalResult = await db.query(
+      `
+      SELECT * FROM rentals WHERE id = $1
+    `,
+      [parseInt(id)]
+    );
+
+    if (rentalResult.rows.length === 0) {
+      return res.sendStatus(404);
+    }
+
+    if (rentalResult.rows[0].returnDate !== null) {
+      return res.status(400).send("Returned rental!");
+    }
+
+    await db.query(
+      `
+      DELETE FROM rentals WHERE id = $1
+    `,
+      [parseInt(id)]
+    );
+
+    res.sendStatus(200);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
   }
-
-  const { rentDate, daysRented, pricePerDay } = rentalResult.rows[0];
-  const daysDelayed = dayjs(returnDate).diff(rentDate, "day") - daysRented;
-
-  if (daysDelayed > 0) {
-    delayFee = daysDelayed * pricePerDay;
-  } else {
-    delayFee = 0;
-  }
-
-  await db.query(
-    `
-    UPDATE rentals SET "returnDate" = $1, "delayFee" = $2 
-    WHERE id = $3
-  `,
-    [returnDate, delayFee, id]
-  );
-
-  res.sendStatus(200);
 }
