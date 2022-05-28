@@ -42,7 +42,7 @@ export async function addRental(req, res) {
 
 export async function getRentals(req, res) {
   try {
-    const { customerId, gameId } = req.query;
+    const { customerId, gameId, startDate, status } = req.query;
     const limit = req.query.limit || null;
     const offset = req.query.offset || 0;
     let rentalsResult;
@@ -74,18 +74,31 @@ export async function getRentals(req, res) {
         [parseInt(gameId)]
       );
     } else {
-      rentalsResult = await db.query(
-        `
-      SELECT rentals.*, json_build_object('id', customers.id, 'name', customers.name) as costumer, 
+      let textQuery = `SELECT rentals.*, json_build_object('id', customers.id, 'name', customers.name) as costumer, 
       json_build_object('id', games.id, 'name', games.name, 'categoryId', games."categoryId", 'categoryName', categories.name) as game
       FROM rentals 
       JOIN customers ON rentals."customerId" = customers.id
       JOIN games ON rentals."gameId" = games.id
       JOIN categories ON games."categoryId"=categories.id
-      LIMIT $1 OFFSET $2
-    `,
-        [limit, offset]
-      );
+      `;
+
+      if (status === "open") {
+        textQuery += `WHERE rentals."returnDate" IS NULL`;
+      } else if (status === "close") {
+        textQuery += `WHERE rentals."returnDate" IS NOT NULL`;
+      }
+
+      if (startDate) {
+        textQuery += `WHERE rentals."rentDate" >= $3`;
+      }
+
+      textQuery += " LIMIT $1 OFFSET $2";
+
+      if (startDate) {
+        rentalsResult = await db.query(textQuery, [limit, offset, startDate]);
+      } else {
+        rentalsResult = await db.query(textQuery, [limit, offset]);
+      }
     }
 
     const rentals = rentalsResult.rows.map((rental) => {

@@ -26,10 +26,20 @@ export async function getCategories(req, res) {
   try {
     const limit = req.query.limit || null;
     const offset = req.query.offset || 0;
-    const categories = await db.query(
-      `SELECT * FROM categories LIMIT $1 OFFSET $2`,
-      [limit, offset]
-    );
+    const { order, desc } = req.query;
+
+    let queryText = "";
+    if (order === "name") {
+      queryText = `SELECT * FROM categories ORDER BY name`;
+    } else {
+      queryText = `SELECT * FROM categories`;
+    }
+    if (desc && order) {
+      queryText += ` DESC`;
+    }
+
+    queryText += " LIMIT $1 OFFSET $2";
+    const categories = await db.query(queryText, [limit, offset]);
     res.status(200).send(categories.rows);
   } catch (error) {
     console.log(error);
