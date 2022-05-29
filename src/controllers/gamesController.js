@@ -42,9 +42,11 @@ export async function getGames(req, res) {
     if (!searchString) {
       games = await db.query(
         `
-        SELECT games.*, categories.name as "categoryName"
+        SELECT games.*, categories.name as "categoryName", COUNT(rentals."gameId")::int as "rentalsCount"
         FROM games JOIN categories 
         ON games."categoryId"=categories.id
+        LEFT JOIN rentals ON games.id = rentals."gameId"
+        GROUP BY games.id, categories.name
         LIMIT $1 OFFSET $2
         `,
         [limit, offset]
@@ -52,10 +54,12 @@ export async function getGames(req, res) {
     } else {
       games = await db.query(
         `
-          SELECT games.*, categories.name as "categoryName"
+          SELECT games.*, categories.name as "categoryName", COUNT(rentals."gameId")::int as "rentalsCount"
           FROM games JOIN categories 
           ON games."categoryId"=categories.id
+          LEFT JOIN rentals ON games.id = rentals."gameId"
           WHERE LOWER(games.name) LIKE $1||'%'
+          GROUP BY games.id, categories.name
       `,
         [searchString.toLowerCase()]
       );

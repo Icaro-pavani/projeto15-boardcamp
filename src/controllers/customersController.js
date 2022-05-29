@@ -42,12 +42,22 @@ export async function getCustomers(req, res) {
 
     if (!cpfQuery) {
       customers = await db.query(
-        `SELECT * FROM  customers LIMIT $1 OFFSET $2`,
+        `SELECT customers.*, COUNT(rentals."customerId")::int as "rentalsCount" 
+        FROM customers 
+        LEFT JOIN rentals ON rentals."customerId" = customers.id
+        GROUP BY customers.id
+        LIMIT $1 OFFSET $2
+        `,
         [limit, offset]
       );
     } else {
       customers = await db.query(
-        `SELECT * FROM customers WHERE cpf LIKE $1||'%'`,
+        `SELECT customers.*, COUNT(rentals."customerId")::int as "rentalsCount" 
+        FROM customers 
+        LEFT JOIN rentals ON rentals."customerId" = customers.id
+        WHERE cpf LIKE $1||'%'
+        GROUP BY customers.id
+        `,
         [cpfQuery]
       );
     }
