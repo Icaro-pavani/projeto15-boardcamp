@@ -30,12 +30,11 @@ export async function getCategories(req, res) {
 
     let queryText = "";
     if (order === "name") {
-      queryText = `SELECT * FROM categories ORDER BY name`;
+      queryText = `SELECT * FROM categories ORDER BY name ${
+        desc === "true" ? "DESC" : ""
+      }`;
     } else {
       queryText = `SELECT * FROM categories`;
-    }
-    if (desc && order) {
-      queryText += ` DESC`;
     }
 
     queryText += " LIMIT $1 OFFSET $2";

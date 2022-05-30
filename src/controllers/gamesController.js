@@ -36,6 +36,7 @@ export async function getGames(req, res) {
     const searchString = req.query.name;
     const limit = req.query.limit || null;
     const offset = req.query.offset || 0;
+    const { order, desc } = req.query;
 
     let games = [];
 
@@ -47,6 +48,12 @@ export async function getGames(req, res) {
         ON games."categoryId"=categories.id
         LEFT JOIN rentals ON games.id = rentals."gameId"
         GROUP BY games.id, categories.name
+        ORDER BY ${
+          order
+            ? `"${order.replace(/delete/gi, "").replace(/update/gi, "")}"`
+            : "id"
+        }
+        ${desc === "true" ? "DESC" : ""}
         LIMIT $1 OFFSET $2
         `,
         [limit, offset]
@@ -58,10 +65,17 @@ export async function getGames(req, res) {
           FROM games JOIN categories 
           ON games."categoryId"=categories.id
           LEFT JOIN rentals ON games.id = rentals."gameId"
-          WHERE LOWER(games.name) LIKE $1||'%'
+          WHERE LOWER(games.name) LIKE $3||'%'
           GROUP BY games.id, categories.name
+          ORDER BY ${
+            order
+              ? `"${order.replace(/delete/gi, "").replace(/update/gi, "")}"`
+              : "id"
+          }
+          ${desc === "true" ? "DESC" : ""}
+          LIMIT $1 OFFSET $2
       `,
-        [searchString.toLowerCase()]
+        [limit, offset, searchString.toLowerCase()]
       );
     }
 

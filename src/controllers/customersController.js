@@ -38,6 +38,7 @@ export async function getCustomers(req, res) {
     const cpfQuery = req.query.cpf;
     const limit = req.query.limit || null;
     const offset = req.query.offset || 0;
+    const { order, desc } = req.query;
     let customers = [];
 
     if (!cpfQuery) {
@@ -46,6 +47,12 @@ export async function getCustomers(req, res) {
         FROM customers 
         LEFT JOIN rentals ON rentals."customerId" = customers.id
         GROUP BY customers.id
+        ORDER BY ${
+          order
+            ? `"${order.replace(/delete/gi, "").replace(/update/gi, "")}"`
+            : "id"
+        }
+        ${desc === "true" ? "DESC" : ""}
         LIMIT $1 OFFSET $2
         `,
         [limit, offset]
@@ -57,6 +64,12 @@ export async function getCustomers(req, res) {
         LEFT JOIN rentals ON rentals."customerId" = customers.id
         WHERE cpf LIKE $1||'%'
         GROUP BY customers.id
+        ORDER BY ${
+          order
+            ? `"${order.replace(/delete/gi, "").replace(/update/gi, "")}"`
+            : "id"
+        }
+        ${desc === "true" ? "DESC" : ""}
         `,
         [cpfQuery]
       );

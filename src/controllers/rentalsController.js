@@ -45,6 +45,7 @@ export async function getRentals(req, res) {
     const { customerId, gameId, startDate, status } = req.query;
     const limit = req.query.limit || null;
     const offset = req.query.offset || 0;
+    const { order, desc } = req.query;
     let rentalsResult;
 
     if (customerId) {
@@ -92,7 +93,13 @@ export async function getRentals(req, res) {
         textQuery += `WHERE rentals."rentDate" >= $3`;
       }
 
-      textQuery += " LIMIT $1 OFFSET $2";
+      textQuery += `ORDER BY ${
+        order
+          ? `"${order.replace(/delete/gi, "").replace(/update/gi, "")}"`
+          : "id"
+      }
+      ${desc === "true" ? "DESC" : ""}
+      LIMIT $1 OFFSET $2`;
 
       if (startDate) {
         rentalsResult = await db.query(textQuery, [limit, offset, startDate]);
