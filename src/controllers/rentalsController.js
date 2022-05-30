@@ -203,8 +203,8 @@ export async function getRentalMetrics(req, res) {
   try {
     const { startDate, endDate } = req.query;
     let queryMetricString = `
-      SELECT SUM("originalPrice" + "delayFee")::int, COUNT(id)::int
-      FROM  rentals
+      SELECT SUM("originalPrice")::int as "priceSum", SUM("delayFee")::int as "feeSum", COUNT(id)::int
+      FROM rentals
     `;
     let metricResult;
 
@@ -223,7 +223,8 @@ export async function getRentalMetrics(req, res) {
       metricResult = await db.query(queryMetricString);
     }
 
-    const { sum: revenue, count: rentals } = metricResult.rows[0];
+    const { priceSum, feeSum, count: rentals } = metricResult.rows[0];
+    const revenue = priceSum + feeSum;
     const average = parseInt(revenue / rentals);
 
     const metrics = {
